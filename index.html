@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciclo de Estudos</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(rgba(15, 32, 39, 0.8), rgba(32, 58, 67, 0.8), rgba(44, 83, 100, 0.8)), 
+                        url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            background-attachment: fixed;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            margin-top: 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        button:hover { background-color: #45a049; }
+        button:disabled { background-color: #777; cursor: not-allowed; }
+
+        .btn-secondary { background-color: #2196F3; }
+        .btn-secondary:hover { background-color: #0b7dda; }
+        
+        .btn-danger { background-color: #f44336; padding: 8px; font-size: 0.9rem; margin-top: 5px;}
+        .btn-danger:hover { background-color: #da190b; }
+
+        /* Dashboard de Matérias */
+        .subject-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .subject-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .subject-title { font-size: 1.2rem; font-weight: bold; color: #FFD700; }
+        .subject-progress { font-size: 0.9rem; color: #ddd; }
+
+        /* Tela de Estudo */
+        #studySection { display: none; }
+
+        .current-task {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .current-task h2 {
+            font-size: 3rem;
+            margin: 10px 0;
+            color: #FFD700;
+        }
+
+        .progress-tracker {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+
+        /* Estilos para a Trilha Visual Focada */
+        .trail-container {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .trail-container h3 {
+            font-size: 0.9rem;
+            color: #bbb;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .trail-blocos {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem; /* Um pouco maior para dar mais destaque já que é único */
+        }
+        
+        .trail-bloco {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        
+        .trail-item {
+            display: inline-block;
+            margin: 0 4px;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .trail-item.done {
+            color: #4CAF50;
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        
+        .trail-item.active {
+            color: #FFD700;
+            font-weight: bold;
+            transform: scale(1.2);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="dashboardSection">
+            <h1>Minhas Matérias</h1>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 25px;">
+                <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Nova Matéria</h3>
+                <input type="text" id="subjectName" placeholder="Nome (Ex: Inglês, História)" required>
+                <input type="number" id="totalChapters" min="1" placeholder="Total de Capítulos (Ex: 10)" required>
+                <button onclick="adicionarMateria()">Criar Ciclo</button>
+            </div>
+
+            <div id="subjectsList"></div>
+        </div>
+
+        <div id="studySection">
+            <h1 id="studyTitle">Matéria</h1>
+            
+            <div class="current-task">
+                <p>Estude agora o:</p>
+                <h2 id="chapterDisplay">Capítulo --</h2>
+                <p id="actionType">--</p>
+                
+                <!-- ÁREA: Trilha do Plano de Repetição (Focado) -->
+                <div id="trailContainer" class="trail-container" style="display: none;">
+                    <h3>Plano Atual</h3>
+                    <div id="sequenceTrail" class="trail-blocos"></div>
+                </div>
+            </div>
+            
+            <button id="nextBtn" onclick="avancarPasso()">Marcar como Concluído</button>
+            <div class="progress-tracker" id="progressDisplay">0/0</div>
+            <button class="btn-secondary" onclick="voltarDashboard()">Voltar para Matérias</button>
+        </div>
+
+    </div>
+
+    <script>
+        let subjects = JSON.parse(localStorage.getItem('studyPWA_subjects')) || [];
+        let activeSubjectId = null;
+
+        function gerarSequencia(total) {
+            let seq = [];
+            for (let i = 1; i <= total; i += 2) {
+                if (i + 1 <= total) {
+                    seq.push(i, i + 1, i, i + 1);
+                } else {
+                    seq.push(i, i);
+                }
+            }
+            return seq;
+        }
+
+        function salvarDados() {
+            localStorage.setItem('studyPWA_subjects', JSON.stringify(subjects));
+        }
+
+        function adicionarMateria() {
+            const nameInput = document.getElementById('subjectName');
+            const chaptersInput = document.getElementById('totalChapters');
+            const name = nameInput.value.trim();
+            const total = parseInt(chaptersInput.value);
+
+            if (!name || isNaN(total) || total <= 0) {
+                alert("Preencha o nome e um número válido de capítulos.");
+                return;
+            }
+
+            const newSubject = {
+                id: Date.now(),
+                name: name,
+                total: total,
+                sequence: gerarSequencia(total),
+                currentIndex: 0
+            };
+
+            subjects.push(newSubject);
+            salvarDados();
+            
+            nameInput.value = '';
+            chaptersInput.value = '';
+            renderizarDashboard();
+        }
+
+        function excluirMateria(id) {
+            if(confirm("Tem certeza que deseja excluir esta matéria? O progresso será perdido.")) {
+                subjects = subjects.filter(sub => sub.id !== id);
+                salvarDados();
+                renderizarDashboard();
+            }
+        }
+
+        function renderizarDashboard() {
+            const list = document.getElementById('subjectsList');
+            list.innerHTML = '';
+
+            if (subjects.length === 0) {
+                list.innerHTML = '<p style="color: #bbb;">Nenhuma matéria cadastrada. Crie uma acima!</p>';
+                return;
+            }
+
+            subjects.forEach(sub => {
+                const card = document.createElement('div');
+                card.className = 'subject-card';
+                
+                const isFinished = sub.currentIndex >= sub.sequence.length;
+                const statusText = isFinished ? "Concluído!" : `Passo ${sub.currentIndex} de ${sub.sequence.length}`;
+
+                card.innerHTML = `
+                    <div class="subject-header">
+                        <span class="subject-title">${sub.name}</span>
+                        <span class="subject-progress">${statusText}</span>
+                    </div>
+                    <button onclick="abrirEstudo(${sub.id})">${isFinished ? 'Ver Resultado' : 'Continuar Estudando'}</button>
+                    <button class="btn-danger" onclick="excluirMateria(${sub.id})">Excluir</button>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function abrirEstudo(id) {
+            activeSubjectId = id;
+            document.getElementById('dashboardSection').style.display = 'none';
+            document.getElementById('studySection').style.display = 'block';
+            atualizarTelaEstudo();
+        }
+
+        function voltarDashboard() {
+            activeSubjectId = null;
+            document.getElementById('studySection').style.display = 'none';
+            document.getElementById('dashboardSection').style.display = 'block';
+            renderizarDashboard();
+        }
+
+        function atualizarTelaEstudo() {
+            const subject = subjects.find(sub => sub.id === activeSubjectId);
+            if (!subject) return;
+
+            document.getElementById('studyTitle').innerText = subject.name;
+            const nextBtn = document.getElementById('nextBtn');
+            const progressDisplay = document.getElementById('progressDisplay');
+            const chapterDisplay = document.getElementById('chapterDisplay');
+            const actionType = document.getElementById('actionType');
+            const trailContainer = document.getElementById('trailContainer');
+            const sequenceTrail = document.getElementById('sequenceTrail');
+
+            // Mantém a ordem de contagem crescente ex: 0/8, 1/8...
+            progressDisplay.innerText = `${subject.currentIndex}/${subject.sequence.length} Passos`;
+
+            // --- LÓGICA DE GERAÇÃO DA TRILHA DE AVANÇO FOCADA ---
+            trailContainer.style.display = 'block';
+            
+            let sequenceObjs = subject.sequence.map((val, idx) => ({ val, idx }));
+            let blocos = [];
+            let i = 0;
+
+            // Agrupamento dos blocos
+            if (sequenceObjs.length >= 2) {
+                blocos.push(sequenceObjs.slice(0, 2));
+                i = 2;
+            } else if (sequenceObjs.length > 0) {
+                blocos.push(sequenceObjs.slice(0, 1));
+                i = 1;
+            }
+
+            while (i < sequenceObjs.length) {
+                blocos.push(sequenceObjs.slice(i, i + 4));
+                i += 4;
+            }
+
+            // Descobre qual é o bloco atual com base no índice atual do usuário
+            let blocoAtivo;
+            if (subject.currentIndex < subject.sequence.length) {
+                // Encontra o bloco que contém o índice atual
+                blocoAtivo = blocos.find(bloco => bloco.some(item => item.idx === subject.currentIndex));
+            } else {
+                // Se o ciclo já acabou, exibe o último bloco
+                blocoAtivo = blocos[blocos.length - 1];
+            }
+
+            // Geração do HTML apenas para o bloco atual
+            if (blocoAtivo) {
+                let itemsHTML = blocoAtivo.map(item => {
+                    let statusClass = '';
+                    if (item.idx < subject.currentIndex) statusClass = 'done';
+                    else if (item.idx === subject.currentIndex) statusClass = 'active';
+                    
+                    return `<span class="trail-item ${statusClass}">${item.val}</span>`;
+                }).join(', ');
+                
+                sequenceTrail.innerHTML = `<div class="trail-bloco">[ ${itemsHTML} ]</div>`;
+            } else {
+                sequenceTrail.innerHTML = '';
+            }
+            // ---------------------------------------------
+
+            if (subject.currentIndex < subject.sequence.length) {
+                const currentChapter = subject.sequence[subject.currentIndex];
+                chapterDisplay.innerText = `Capítulo ${currentChapter}`;
+                
+                const positionInBlock = subject.currentIndex % 4;
+                if (positionInBlock < 2) {
+                    actionType.innerText = "Primeiro Estudo";
+                    actionType.style.color = "#4CAF50";
+                } else {
+                    actionType.innerText = "Revisão de Fixação";
+                    actionType.style.color = "#2196F3";
+                }
+
+                nextBtn.disabled = false;
+                nextBtn.innerText = "Avançar";
+            } else {
+                chapterDisplay.innerText = "Fim!";
+                actionType.innerText = "Ciclo concluído com sucesso.";
+                actionType.style.color = "#FFD700";
+                nextBtn.disabled = true;
+                nextBtn.innerText = "Finalizado";
+            }
+        }
+
+        function avancarPasso() {
+            const subject = subjects.find(sub => sub.id === activeSubjectId);
+            if (subject && subject.currentIndex < subject.sequence.length) {
+                subject.currentIndex++;
+                salvarDados();
+                atualizarTelaEstudo();
+            }
+        }
+
+        renderizarDashboard();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
+            });
+        }
+    </script>
+</body>
+</html>
