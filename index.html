@@ -80,7 +80,6 @@
         .btn-danger { background-color: #f44336; padding: 8px; font-size: 0.9rem; margin-top: 5px;}
         .btn-danger:hover { background-color: #da190b; }
 
-        /* Dashboard de Matérias */
         .subject-card {
             background: rgba(0, 0, 0, 0.4);
             border-radius: 10px;
@@ -101,7 +100,6 @@
         .subject-title { font-size: 1.2rem; font-weight: bold; color: #FFD700; }
         .subject-progress { font-size: 0.9rem; color: #ddd; }
 
-        /* Tela de Estudo */
         #studySection { display: none; }
 
         .current-task {
@@ -116,6 +114,11 @@
             margin: 10px 0;
             color: #FFD700;
         }
+        
+        #actionType {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
 
         .progress-tracker {
             font-size: 1.2rem;
@@ -125,7 +128,6 @@
             color: #ddd;
         }
 
-        /* Estilos para a Trilha Visual Focada */
         .trail-container {
             margin-top: 25px;
             padding: 15px;
@@ -148,7 +150,7 @@
             justify-content: center;
             align-items: center;
             gap: 8px;
-            font-size: 1.1rem; /* Um pouco maior para dar mais destaque já que é único */
+            font-size: 1.1rem; 
         }
         
         .trail-bloco {
@@ -204,7 +206,6 @@
                 <h2 id="chapterDisplay">Capítulo --</h2>
                 <p id="actionType">--</p>
                 
-                <!-- ÁREA: Trilha do Plano de Repetição (Focado) -->
                 <div id="trailContainer" class="trail-container" style="display: none;">
                     <h3>Plano Atual</h3>
                     <div id="sequenceTrail" class="trail-blocos"></div>
@@ -222,14 +223,27 @@
         let subjects = JSON.parse(localStorage.getItem('studyPWA_subjects')) || [];
         let activeSubjectId = null;
 
+        // NOVA LÓGICA DE GERAÇÃO: Cada bloco se repete estritamente 3 vezes seguidas (1,2,3 - 1,2,3 - 1,2,3)
         function gerarSequencia(total) {
             let seq = [];
-            for (let i = 1; i <= total; i += 2) {
-                if (i + 1 <= total) {
-                    seq.push(i, i + 1, i, i + 1);
-                } else {
-                    seq.push(i, i);
+            let tamanhoBloco = 3;
+            let blocosBase = [];
+
+            // Separa os capítulos em blocos de no máximo 3
+            for (let i = 1; i <= total; i += tamanhoBloco) {
+                let chunk = [];
+                for (let j = 0; j < tamanhoBloco && (i + j) <= total; j++) {
+                    chunk.push(i + j);
                 }
+                blocosBase.push(chunk);
+            }
+
+            // Constrói a sequência repetindo cada grupo exatamente 3 vezes puras
+            for (let i = 0; i < blocosBase.length; i++) {
+                let blocoAtual = blocosBase[i];
+                seq.push(...blocoAtual); // 1ª vez
+                seq.push(...blocoAtual); // 2ª vez
+                seq.push(...blocoAtual); // 3ª vez
             }
             return seq;
         }
@@ -327,41 +341,42 @@
             const trailContainer = document.getElementById('trailContainer');
             const sequenceTrail = document.getElementById('sequenceTrail');
 
-            // Mantém a ordem de contagem crescente ex: 0/8, 1/8...
             progressDisplay.innerText = `${subject.currentIndex}/${subject.sequence.length} Passos`;
 
-            // --- LÓGICA DE GERAÇÃO DA TRILHA DE AVANÇO FOCADA ---
             trailContainer.style.display = 'block';
             
+            // Reconstruir o agrupamento de blocos visuais idênticos à nova regra
             let sequenceObjs = subject.sequence.map((val, idx) => ({ val, idx }));
-            let blocos = [];
-            let i = 0;
-
-            // Agrupamento dos blocos
-            if (sequenceObjs.length >= 2) {
-                blocos.push(sequenceObjs.slice(0, 2));
-                i = 2;
-            } else if (sequenceObjs.length > 0) {
-                blocos.push(sequenceObjs.slice(0, 1));
-                i = 1;
+            let blocosVisual = [];
+            let idxCounter = 0;
+            
+            let blocosBase = [];
+            for (let i = 1; i <= subject.total; i += 3) {
+                let chunk = [];
+                for (let j = 0; j < 3 && (i + j) <= subject.total; j++) {
+                    chunk.push(i + j);
+                }
+                blocosBase.push(chunk);
             }
 
-            while (i < sequenceObjs.length) {
-                blocos.push(sequenceObjs.slice(i, i + 4));
-                i += 4;
+            for (let i = 0; i < blocosBase.length; i++) {
+                let lenAtual = blocosBase[i].length;
+                // Cada bloco base entra 3 vezes seguidas com seu respectivo tamanho na timeline de passos
+                blocosVisual.push(sequenceObjs.slice(idxCounter, idxCounter + lenAtual));
+                idxCounter += lenAtual;
+                
+                blocosVisual.push(sequenceObjs.slice(idxCounter, idxCounter + lenAtual));
+                idxCounter += lenAtual;
+                
+                blocosVisual.push(sequenceObjs.slice(idxCounter, idxCounter + lenAtual));
+                idxCounter += lenAtual;
             }
 
-            // Descobre qual é o bloco atual com base no índice atual do usuário
-            let blocoAtivo;
-            if (subject.currentIndex < subject.sequence.length) {
-                // Encontra o bloco que contém o índice atual
-                blocoAtivo = blocos.find(bloco => bloco.some(item => item.idx === subject.currentIndex));
-            } else {
-                // Se o ciclo já acabou, exibe o último bloco
-                blocoAtivo = blocos[blocos.length - 1];
-            }
+            // Descobre qual bloco exibir
+            let indiceBlocoAtivo = blocosVisual.findIndex(b => b.some(item => item.idx === subject.currentIndex));
+            let blocoAtivo = blocosVisual[indiceBlocoAtivo] || blocosVisual[blocosVisual.length - 1];
 
-            // Geração do HTML apenas para o bloco atual
+            // Renderiza os números do bloco ativo atual
             if (blocoAtivo) {
                 let itemsHTML = blocoAtivo.map(item => {
                     let statusClass = '';
@@ -372,22 +387,25 @@
                 }).join(', ');
                 
                 sequenceTrail.innerHTML = `<div class="trail-bloco">[ ${itemsHTML} ]</div>`;
-            } else {
-                sequenceTrail.innerHTML = '';
             }
-            // ---------------------------------------------
 
             if (subject.currentIndex < subject.sequence.length) {
                 const currentChapter = subject.sequence[subject.currentIndex];
                 chapterDisplay.innerText = `Capítulo ${currentChapter}`;
                 
-                const positionInBlock = subject.currentIndex % 4;
-                if (positionInBlock < 2) {
-                    actionType.innerText = "Primeiro Estudo";
-                    actionType.style.color = "#4CAF50";
-                } else {
-                    actionType.innerText = "Revisão de Fixação";
-                    actionType.style.color = "#2196F3";
+                // Define os rótulos e cores com base nas três rodadas puras (0, 1 e 2)
+                if (indiceBlocoAtivo !== -1) {
+                    let stepType = indiceBlocoAtivo % 3;
+                    if (stepType === 0) {
+                        actionType.innerText = "1ª Leitura do Bloco";
+                        actionType.style.color = "#4CAF50"; // Verde
+                    } else if (stepType === 1) {
+                        actionType.innerText = "2ª Leitura (Fixação)";
+                        actionType.style.color = "#2196F3"; // Azul
+                    } else {
+                        actionType.innerText = "3ª Leitura (Consolidação)";
+                        actionType.style.color = "#E91E63"; // Rosa/Laranja para indicar fim daquele grupo
+                    }
                 }
 
                 nextBtn.disabled = false;
