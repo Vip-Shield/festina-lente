@@ -46,7 +46,7 @@
             letter-spacing: 2px;
         }
 
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], select, textarea {
             width: 100%;
             padding: 12px;
             border-radius: 8px;
@@ -55,6 +55,12 @@
             font-size: 1rem;
             margin-bottom: 15px;
             text-align: center;
+        }
+
+        textarea {
+            text-align: left;
+            resize: vertical;
+            min-height: 80px;
         }
 
         button {
@@ -89,32 +95,7 @@
             display: flex;
             flex-direction: column;
             text-align: left;
-            transition: all 0.3s ease;
         }
-
-        /* --- NOVO: Efeito Esfumaçado para matérias lidas no dia --- */
-        .subject-card.estudado-hoje {
-            opacity: 0.4;
-            filter: blur(0.8px);
-        }
-
-        .subject-card.estudado-hoje:hover {
-            opacity: 1;
-            filter: blur(0);
-        }
-
-        .badge-hoje {
-            background-color: #4CAF50;
-            color: #fff;
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: 10px;
-            vertical-align: middle;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        /* ----------------------------------------------------------- */
 
         .subject-header {
             display: flex;
@@ -137,9 +118,10 @@
         }
 
         .current-task h2 {
-            font-size: 3rem;
+            font-size: 2.2rem; /* Levemente reduzido para caber nomes longos de matérias */
             margin: 10px 0;
             color: #FFD700;
+            word-wrap: break-word;
         }
 
         .progress-tracker {
@@ -199,7 +181,7 @@
         .trail-item.active {
             color: #FFD700;
             font-weight: bold;
-            transform: scale(1.2);
+            transform: scale(1.1);
             text-decoration: underline;
         }
     </style>
@@ -209,12 +191,29 @@
     <div class="container">
         
         <div id="dashboardSection">
-            <h1>Festina Lente - Técnica Feynman</h1>
+            <h1>Ciclo de Estudos</h1>
             
             <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 25px;">
-                <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Nova Matéria</h3>
-                <input type="text" id="subjectName" placeholder="Nome (Ex: Inglês, História)" required>
-                <input type="number" id="totalChapters" min="1" placeholder="Total de Capítulos (Ex: 10)" required>
+                <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Novo Ciclo</h3>
+                
+                <input type="text" id="subjectName" placeholder="Nome do Ciclo (Ex: Concurso, Revisão)" required>
+                
+                <!-- Seleção do tipo de ciclo -->
+                <select id="cycleType" onchange="toggleCycleInputs()">
+                    <option value="feynman">Técnica de Repetição (Festina Lente)</option>
+                    <option value="custom">Lista de Matérias/Tópicos Personalizada</option>
+                </select>
+
+                <!-- Inputs para Feynman -->
+                <div id="inputFeynman">
+                    <input type="number" id="totalChapters" min="1" placeholder="Total de Capítulos (Ex: 10)">
+                </div>
+
+                <!-- Inputs para Ciclo Personalizado -->
+                <div id="inputCustom" style="display: none;">
+                    <textarea id="customSequence" placeholder="Digite as matérias separadas por vírgula.&#10;Ex: CTB, Direito Penal, Administrativo..."></textarea>
+                </div>
+
                 <button onclick="adicionarMateria()">Criar Ciclo</button>
             </div>
 
@@ -225,11 +224,11 @@
             <h1 id="studyTitle">Matéria</h1>
             
             <div class="current-task">
-                <p>Estude agora o:</p>
+                <p>Estude agora:</p>
                 <h2 id="chapterDisplay">Capítulo --</h2>
                 <p id="actionType">--</p>
                 
-                <!-- ÁREA: Trilha do Plano de Repetição (Focado) -->
+                <!-- ÁREA: Trilha do Plano -->
                 <div id="trailContainer" class="trail-container" style="display: none;">
                     <h3>Plano Atual</h3>
                     <div id="sequenceTrail" class="trail-blocos"></div>
@@ -246,6 +245,17 @@
     <script>
         let subjects = JSON.parse(localStorage.getItem('studyPWA_subjects')) || [];
         let activeSubjectId = null;
+
+        function toggleCycleInputs() {
+            const type = document.getElementById('cycleType').value;
+            if (type === 'feynman') {
+                document.getElementById('inputFeynman').style.display = 'block';
+                document.getElementById('inputCustom').style.display = 'none';
+            } else {
+                document.getElementById('inputFeynman').style.display = 'none';
+                document.getElementById('inputCustom').style.display = 'block';
+            }
+        }
 
         function gerarSequencia(total) {
             let seq = [];
@@ -265,34 +275,57 @@
 
         function adicionarMateria() {
             const nameInput = document.getElementById('subjectName');
-            const chaptersInput = document.getElementById('totalChapters');
+            const cycleType = document.getElementById('cycleType').value;
             const name = nameInput.value.trim();
-            const total = parseInt(chaptersInput.value);
 
-            if (!name || isNaN(total) || total <= 0) {
-                alert("Preencha o nome e um número válido de capítulos.");
+            if (!name) {
+                alert("Preencha o nome do ciclo.");
                 return;
+            }
+
+            let sequence = [];
+            let total = 0;
+            let isCustom = false;
+
+            if (cycleType === 'feynman') {
+                const chaptersInput = document.getElementById('totalChapters');
+                total = parseInt(chaptersInput.value);
+                if (isNaN(total) || total <= 0) {
+                    alert("Preencha um número válido de capítulos.");
+                    return;
+                }
+                sequence = gerarSequencia(total);
+            } else {
+                const customInput = document.getElementById('customSequence').value;
+                sequence = customInput.split(',').map(item => item.trim()).filter(item => item.length > 0);
+                if (sequence.length === 0) {
+                    alert("Insira pelo menos uma matéria na lista.");
+                    return;
+                }
+                total = sequence.length;
+                isCustom = true;
             }
 
             const newSubject = {
                 id: Date.now(),
                 name: name,
                 total: total,
-                sequence: gerarSequencia(total),
+                sequence: sequence,
                 currentIndex: 0,
-                lastStudiedDate: null // Novo campo para rastrear se foi visto hoje
+                isCustom: isCustom
             };
 
             subjects.push(newSubject);
             salvarDados();
             
             nameInput.value = '';
-            chaptersInput.value = '';
+            document.getElementById('totalChapters').value = '';
+            document.getElementById('customSequence').value = '';
             renderizarDashboard();
         }
 
         function excluirMateria(id) {
-            if(confirm("Tem certeza que deseja excluir esta matéria? O progresso será perdido.")) {
+            if(confirm("Tem certeza que deseja excluir este ciclo? O progresso será perdido.")) {
                 subjects = subjects.filter(sub => sub.id !== id);
                 salvarDados();
                 renderizarDashboard();
@@ -304,30 +337,20 @@
             list.innerHTML = '';
 
             if (subjects.length === 0) {
-                list.innerHTML = '<p style="color: #bbb;">Nenhuma matéria cadastrada. Crie uma acima!</p>';
+                list.innerHTML = '<p style="color: #bbb;">Nenhum ciclo cadastrado. Crie um acima!</p>';
                 return;
             }
 
-            const dataHoje = new Date().toLocaleDateString(); // Pega a data de hoje
-
             subjects.forEach(sub => {
                 const card = document.createElement('div');
+                card.className = 'subject-card';
                 
                 const isFinished = sub.currentIndex >= sub.sequence.length;
                 const statusText = isFinished ? "Concluído!" : `Passo ${sub.currentIndex} de ${sub.sequence.length}`;
-                
-                // Verifica se o último dia de estudo registrado foi hoje
-                const estudadoHoje = sub.lastStudiedDate === dataHoje;
-
-                // Aplica a classe 'estudado-hoje' se já tiver sido lido no dia e não estiver concluído totalmente
-                card.className = `subject-card ${estudadoHoje && !isFinished ? 'estudado-hoje' : ''}`;
-
-                // Adiciona o selo visual no título se foi estudado hoje
-                const badgeHtml = (estudadoHoje && !isFinished) ? '<span class="badge-hoje">Visto Hoje</span>' : '';
 
                 card.innerHTML = `
                     <div class="subject-header">
-                        <span class="subject-title">${sub.name} ${badgeHtml}</span>
+                        <span class="subject-title">${sub.name}</span>
                         <span class="subject-progress">${statusText}</span>
                     </div>
                     <button onclick="abrirEstudo(${sub.id})">${isFinished ? 'Ver Resultado' : 'Continuar Estudando'}</button>
@@ -363,19 +386,21 @@
             const trailContainer = document.getElementById('trailContainer');
             const sequenceTrail = document.getElementById('sequenceTrail');
 
-            // Mantém a ordem de contagem crescente
+            // Mantém a ordem de contagem crescente (Ex: 0/8, 1/8)
             progressDisplay.innerText = `${subject.currentIndex}/${subject.sequence.length} Passos`;
 
+            // --- LÓGICA DE GERAÇÃO DA TRILHA DE AVANÇO ---
             trailContainer.style.display = 'block';
             
             let sequenceObjs = subject.sequence.map((val, idx) => ({ val, idx }));
             let blocos = [];
             let i = 0;
 
-            if (sequenceObjs.length >= 2) {
+            // Agrupamento dos blocos na trilha
+            if (sequenceObjs.length >= 2 && !subject.isCustom) {
                 blocos.push(sequenceObjs.slice(0, 2));
                 i = 2;
-            } else if (sequenceObjs.length > 0) {
+            } else if (sequenceObjs.length > 0 && !subject.isCustom) {
                 blocos.push(sequenceObjs.slice(0, 1));
                 i = 1;
             }
@@ -405,18 +430,26 @@
             } else {
                 sequenceTrail.innerHTML = '';
             }
+            // ---------------------------------------------
 
             if (subject.currentIndex < subject.sequence.length) {
-                const currentChapter = subject.sequence[subject.currentIndex];
-                chapterDisplay.innerText = `Capítulo ${currentChapter}`;
+                const currentVal = subject.sequence[subject.currentIndex];
                 
-                const positionInBlock = subject.currentIndex % 4;
-                if (positionInBlock < 2) {
-                    actionType.innerText = "Primeiro Estudo";
+                // Exibe de forma diferente se for Feynman vs Personalizado
+                if (subject.isCustom) {
+                    chapterDisplay.innerText = currentVal;
+                    actionType.innerText = "Estudo Direcionado";
                     actionType.style.color = "#4CAF50";
                 } else {
-                    actionType.innerText = "Revisão de Fixação";
-                    actionType.style.color = "#2196F3";
+                    chapterDisplay.innerText = `Capítulo ${currentVal}`;
+                    const positionInBlock = subject.currentIndex % 4;
+                    if (positionInBlock < 2) {
+                        actionType.innerText = "Primeiro Estudo";
+                        actionType.style.color = "#4CAF50";
+                    } else {
+                        actionType.innerText = "Revisão de Fixação";
+                        actionType.style.color = "#2196F3";
+                    }
                 }
 
                 nextBtn.disabled = false;
@@ -434,10 +467,6 @@
             const subject = subjects.find(sub => sub.id === activeSubjectId);
             if (subject && subject.currentIndex < subject.sequence.length) {
                 subject.currentIndex++;
-                
-                // NOVO: Registra o dia de hoje quando o passo for concluído
-                subject.lastStudiedDate = new Date().toLocaleDateString();
-                
                 salvarDados();
                 atualizarTelaEstudo();
             }
