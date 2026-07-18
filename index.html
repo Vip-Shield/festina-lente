@@ -95,17 +95,51 @@
             display: flex;
             flex-direction: column;
             text-align: left;
+            transition: opacity 0.3s ease, background 0.3s ease;
+        }
+
+        /* Classes para deixar o cartão inteiro apagado */
+        .card-done-today, .card-finished {
+            opacity: 0.4;
+        }
+
+        .card-done-today:hover, .card-finished:hover {
+            opacity: 0.8; /* Acende um pouco no hover/toque para facilitar a leitura se precisar */
         }
 
         .subject-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 10px;
         }
 
         .subject-title { font-size: 1.2rem; font-weight: bold; color: #FFD700; }
-        .subject-progress { font-size: 0.9rem; color: #ddd; }
+        .subject-progress { font-size: 0.9rem; color: #ddd; margin-top: 4px; }
+
+        /* Selos de Status Diário */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 8px;
+        }
+        
+        .badge-done { 
+            background-color: rgba(76, 175, 80, 0.15); 
+            color: #81c784; 
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .badge-pending { background-color: #ff9800; color: white; }
+        
+        .badge-finished { 
+            background-color: rgba(156, 39, 176, 0.2); 
+            color: #ce93d8;
+            border: 1px solid rgba(156, 39, 176, 0.4);
+        }
 
         /* Tela de Estudo */
         #studySection { display: none; }
@@ -118,7 +152,7 @@
         }
 
         .current-task h2 {
-            font-size: 2.2rem; /* Levemente reduzido para caber nomes longos de matérias */
+            font-size: 2.2rem;
             margin: 10px 0;
             color: #FFD700;
             word-wrap: break-word;
@@ -198,18 +232,15 @@
                 
                 <input type="text" id="subjectName" placeholder="Nome do Ciclo (Ex: Concurso, Revisão)" required>
                 
-                <!-- Seleção do tipo de ciclo -->
                 <select id="cycleType" onchange="toggleCycleInputs()">
                     <option value="feynman">Técnica de Repetição (Festina Lente)</option>
                     <option value="custom">Lista de Matérias/Tópicos Personalizada</option>
                 </select>
 
-                <!-- Inputs para Feynman -->
                 <div id="inputFeynman">
                     <input type="number" id="totalChapters" min="1" placeholder="Total de Capítulos (Ex: 10)">
                 </div>
 
-                <!-- Inputs para Ciclo Personalizado -->
                 <div id="inputCustom" style="display: none;">
                     <textarea id="customSequence" placeholder="Digite as matérias separadas por vírgula.&#10;Ex: CTB, Direito Penal, Administrativo..."></textarea>
                 </div>
@@ -228,7 +259,6 @@
                 <h2 id="chapterDisplay">Capítulo --</h2>
                 <p id="actionType">--</p>
                 
-                <!-- ÁREA: Trilha do Plano -->
                 <div id="trailContainer" class="trail-container" style="display: none;">
                     <h3>Plano Atual</h3>
                     <div id="sequenceTrail" class="trail-blocos"></div>
@@ -312,7 +342,8 @@
                 total: total,
                 sequence: sequence,
                 currentIndex: 0,
-                isCustom: isCustom
+                isCustom: isCustom,
+                lastStudiedDate: null
             };
 
             subjects.push(newSubject);
@@ -341,16 +372,38 @@
                 return;
             }
 
+            const today = new Date().toDateString(); 
+
             subjects.forEach(sub => {
                 const card = document.createElement('div');
-                card.className = 'subject-card';
                 
                 const isFinished = sub.currentIndex >= sub.sequence.length;
                 const statusText = isFinished ? "Concluído!" : `Passo ${sub.currentIndex} de ${sub.sequence.length}`;
+                
+                const isStudiedToday = sub.lastStudiedDate === today;
+                
+                // Aplica a classe correspondente ao status no cartão
+                let cardClass = 'subject-card';
+                let dailyBadge = '';
+
+                if (isFinished) {
+                    cardClass += ' card-finished';
+                    dailyBadge = '<span class="badge badge-finished">🏆 Ciclo Finalizado</span>';
+                } else if (isStudiedToday) {
+                    cardClass += ' card-done-today';
+                    dailyBadge = '<span class="badge badge-done">✅ Feito Hoje</span>';
+                } else {
+                    dailyBadge = '<span class="badge badge-pending">⏳ Pendente Hoje</span>';
+                }
+
+                card.className = cardClass;
 
                 card.innerHTML = `
                     <div class="subject-header">
-                        <span class="subject-title">${sub.name}</span>
+                        <div>
+                            <div class="subject-title">${sub.name}</div>
+                            ${dailyBadge}
+                        </div>
                         <span class="subject-progress">${statusText}</span>
                     </div>
                     <button onclick="abrirEstudo(${sub.id})">${isFinished ? 'Ver Resultado' : 'Continuar Estudando'}</button>
@@ -386,17 +439,14 @@
             const trailContainer = document.getElementById('trailContainer');
             const sequenceTrail = document.getElementById('sequenceTrail');
 
-            // Mantém a ordem de contagem crescente (Ex: 0/8, 1/8)
             progressDisplay.innerText = `${subject.currentIndex}/${subject.sequence.length} Passos`;
 
-            // --- LÓGICA DE GERAÇÃO DA TRILHA DE AVANÇO ---
             trailContainer.style.display = 'block';
             
             let sequenceObjs = subject.sequence.map((val, idx) => ({ val, idx }));
             let blocos = [];
             let i = 0;
 
-            // Agrupamento dos blocos na trilha
             if (sequenceObjs.length >= 2 && !subject.isCustom) {
                 blocos.push(sequenceObjs.slice(0, 2));
                 i = 2;
@@ -430,12 +480,10 @@
             } else {
                 sequenceTrail.innerHTML = '';
             }
-            // ---------------------------------------------
 
             if (subject.currentIndex < subject.sequence.length) {
                 const currentVal = subject.sequence[subject.currentIndex];
                 
-                // Exibe de forma diferente se for Feynman vs Personalizado
                 if (subject.isCustom) {
                     chapterDisplay.innerText = currentVal;
                     actionType.innerText = "Estudo Direcionado";
@@ -467,6 +515,9 @@
             const subject = subjects.find(sub => sub.id === activeSubjectId);
             if (subject && subject.currentIndex < subject.sequence.length) {
                 subject.currentIndex++;
+                
+                subject.lastStudiedDate = new Date().toDateString(); 
+                
                 salvarDados();
                 atualizarTelaEstudo();
             }
