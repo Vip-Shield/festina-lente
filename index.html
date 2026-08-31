@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciclo de Estudos</title>
+    <link rel="shortcut icon" type="imagex/png" href="liber-sem-fundo.ico">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(rgba(15, 32, 39, 0.8), rgba(32, 58, 67, 0.8), rgba(44, 83, 100, 0.8)), 
+                        url('https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            background-attachment: fixed;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            margin-top: 20px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: center; 
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative; 
+        }
+        
+        .header-top h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .settings-dropdown {
+            position: absolute;
+            right: 0; 
+            display: inline-block;
+        }
+
+        .settings-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 0;
+            width: auto;
+            margin: 0;
+            color: #bbb;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .settings-btn:hover {
+            background: transparent;
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 40px;
+            background-color: rgba(32, 58, 67, 0.95);
+            min-width: 180px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            z-index: 10;
+            padding: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .dropdown-content a {
+            color: #fff;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            font-size: 0.95rem;
+            transition: background 0.3s;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .show-menu { display: block; }
+
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        textarea {
+            text-align: left;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        button:hover { background-color: #45a049; }
+        button:disabled { background-color: #777; cursor: not-allowed; }
+
+        .btn-secondary { background-color: #2196F3; }
+        .btn-secondary:hover { background-color: #0b7dda; }
+        
+        .btn-danger { background-color: #f44336; padding: 8px; font-size: 0.9rem; margin-top: 5px; width: 48%;}
+        .btn-danger:hover { background-color: #da190b; }
+        
+        .btn-edit { background-color: #FF9800; padding: 8px; font-size: 0.9rem; margin-top: 5px; width: 48%;}
+        .btn-edit:hover { background-color: #e68a00; }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(rgba(32, 58, 67, 0.95), rgba(44, 83, 100, 0.95));
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal-content label {
+            display: block;
+            text-align: left;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+
+        .subject-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            transition: opacity 0.3s ease, background 0.3s ease;
+        }
+
+        .card-done-today, .card-finished { opacity: 0.4; }
+        .card-done-today:hover, .card-finished:hover { opacity: 0.8; }
+
+        .subject-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .subject-title { font-size: 1.2rem; font-weight: bold; color: #FFD700; }
+        .subject-dates { font-size: 0.85rem; color: #aaa; margin-top: 4px; }
+        .subject-progress { font-size: 0.9rem; color: #ddd; margin-top: 4px; }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 8px;
+        }
+        
+        .badge-done { background-color: rgba(76, 175, 80, 0.15); color: #81c784; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .badge-pending { background-color: #ff9800; color: white; } 
+        .badge-purple { background-color: #9c27b0; color: white; } 
+        .badge-yellow { background-color: #ffeb3b; color: #333; } 
+        .badge-red { background-color: #f44336; color: white; } 
+        .badge-finished { background-color: rgba(156, 39, 176, 0.2); color: #ce93d8; border: 1px solid rgba(156, 39, 176, 0.4); }
+
+        #studySection { display: none; }
+
+        .current-task { background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .current-task h2 { font-size: 2.2rem; margin: 10px 0; color: #FFD700; word-wrap: break-word; }
+
+        .progress-tracker { font-size: 1.2rem; font-weight: bold; margin-top: 15px; margin-bottom: 15px; color: #ddd; }
+
+        .trail-container { margin-top: 25px; padding: 15px; background: rgba(0, 0, 0, 0.4); border-radius: 10px; text-align: left; }
+        .trail-container h3 { font-size: 0.9rem; color: #bbb; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .trail-blocos { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 8px; font-size: 1.1rem; }
+        .trail-bloco { background: rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 6px; display: inline-block; }
+        
+        .trail-item { display: inline-block; margin: 0 4px; color: #fff; transition: all 0.3s ease; }
+        .trail-item.done { color: #4CAF50; text-decoration: line-through; opacity: 0.6; }
+        .trail-item.active { color: #FFD700; font-weight: bold; transform: scale(1.1); text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="dashboardSection">
+            <div class="header-top">
+                <h1>Ciclo de Estudos</h1>
+                <div class="settings-dropdown">
+                    <button class="settings-btn" onclick="toggleMenu()" title="Configurações">⚙️</button>
+                    <div id="settingsMenu" class="dropdown-content">
+                        <a href="#" onclick="exportarDados(event); toggleMenu();">💾 Salvar Dados</a>
+                        <a href="#" onclick="document.getElementById('importFile').click(); event.preventDefault(); toggleMenu();">📂 Importar Dados</a>
+                    </div>
+                </div>
+            </div>
+            
+            <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importarDados(event)">
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 25px;">
+                <h3 style="margin-bottom: 15px; font-size: 1.1rem;">Novo Ciclo</h3>
+                
+                <input type="text" id="subjectName" placeholder="Nome do Ciclo (Ex: Concurso, Revisão)" required>
+                
+                <select id="cycleType" onchange="toggleCycleInputs()">
+                    <option value="feynman">Ciclo de Repetição (3x3)</option>
+                    <option value="custom">Lista de Matérias/Tópicos Personalizada</option>
+                    <option value="carousel">Carrossel Rotativo Diário</option>
+                </select>
+
+                <div id="inputFeynman">
+                    <input type="number" id="totalChapters" min="1" placeholder="Total de Capítulos (Ex: 10)">
+                </div>
+
+                <div id="inputCustom" style="display: none;">
+                    <textarea id="customSequence" placeholder="Digite as matérias separadas por vírgula.&#10;Ex: CTB, Direito Penal, Administrativo..."></textarea>
+                </div>
+
+                <button onclick="adicionarMateria()">Criar Ciclo</button>
+            </div>
+
+            <div id="subjectsList"></div>
+        </div>
+
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 15px;">Editar Ciclo</h3>
+                <input type="hidden" id="editSubjectId">
+                
+                <label>Nome do Ciclo:</label>
+                <input type="text" id="editSubjectName" placeholder="Nome">
+                
+                <div id="editFeynmanDiv">
+                    <label>Total de Capítulos / Aulas:</label>
+                    <input type="number" id="editTotalChapters" min="1">
+                </div>
+                
+                <div id="editCustomDiv" style="display:none;">
+                    <label>Sequência Personalizada (separada por vírgula):</label>
+                    <textarea id="editCustomSequence"></textarea>
+                </div>
+                
+                <button onclick="salvarEdicao()">Salvar Alterações</button>
+                <button class="btn-danger" style="width: 100%;" onclick="fecharModalEdicao()">Cancelar</button>
+            </div>
+        </div>
+
+        <div id="studySection">
+            <div class="header-top">
+                <h1 id="studyTitle">Matéria</h1>
+            </div>
+            
+            <div class="current-task">
+                <p>Estude agora:</p>
+                <h2 id="chapterDisplay">Capítulo --</h2>
+                <p id="actionType">--</p>
+                
+                <div id="trailContainer" class="trail-container" style="display: none;">
+                    <h3>Plano Atual</h3>
+                    <div id="sequenceTrail" class="trail-blocos"></div>
+                </div>
+            </div>
+            
+            <button id="nextBtn" onclick="avancarPasso()">Marcar como Concluído</button>
+            <div class="progress-tracker" id="progressDisplay">0/0</div>
+            <button class="btn-secondary" onclick="voltarDashboard()">Voltar para Matérias</button>
+        </div>
+
+    </div>
+
+    <script>
+        let subjects = JSON.parse(localStorage.getItem('studyPWA_subjects')) || [];
+        let activeSubjectId = null;
+
+        function toggleMenu() {
+            document.getElementById("settingsMenu").classList.toggle("show-menu");
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.settings-btn')) {
+                const dropdowns = document.getElementsByClassName("dropdown-content");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    if (dropdowns[i].classList.contains('show-menu')) {
+                        dropdowns[i].classList.remove('show-menu');
+                    }
+                }
+            }
+            const modal = document.getElementById("editModal");
+            if (event.target === modal) {
+                fecharModalEdicao();
+            }
+        }
+
+        function toggleCycleInputs() {
+            const type = document.getElementById('cycleType').value;
+            if (type === 'feynman') {
+                document.getElementById('inputFeynman').style.display = 'block';
+                document.getElementById('inputCustom').style.display = 'none';
+            } else {
+                document.getElementById('inputFeynman').style.display = 'none';
+                document.getElementById('inputCustom').style.display = 'block';
+            }
+        }
+
+        function gerarSequencia(total) {
+            let seq = [];
+            for (let i = 1; i <= total; i += 3) {
+                let bloco = [];
+                for (let j = 0; j < 3; j++) {
+                    if (i + j <= total) {
+                        bloco.push(i + j);
+                    }
+                }
+                for (let k = 0; k < 3; k++) {
+                    seq = seq.concat(bloco);
+                }
+            }
+            return seq;
+        }
+
+        function salvarDados() {
+            localStorage.setItem('studyPWA_subjects', JSON.stringify(subjects));
+        }
+
+        function verificarRotacaoDiaria() {
+            const hoje = new Date().toDateString();
+            let mudou = false;
+            subjects.forEach(sub => {
+                if (sub.isCarousel && sub.lastDayRotated !== hoje) {
+                    if (sub.dailyStudiedCount > 0) {
+                        const count = sub.dailyStudiedCount % sub.sequence.length;
+                        const estudados = sub.sequence.splice(0, count);
+                        sub.sequence.push(...estudados);
+                    }
+                    sub.dailyStudiedCount = 0; 
+                    sub.currentIndex = 0;
+                    sub.lastDayRotated = hoje;
+                    mudou = true;
+                }
+            });
+            if (mudou) salvarDados();
+        }
+
+        function adicionarMateria() {
+            const nameInput = document.getElementById('subjectName');
+            const cycleType = document.getElementById('cycleType').value;
+            const name = nameInput.value.trim();
+
+            if (!name) { alert("Preencha o nome do ciclo."); return; }
+
+            let sequence = [];
+            let total = 0;
+            let isCustom = false;
+            let isCarousel = false;
+
+            if (cycleType === 'feynman') {
+                const chaptersInput = document.getElementById('totalChapters');
+                total = parseInt(chaptersInput.value);
+                if (isNaN(total) || total <= 0) { alert("Preencha um número válido de capítulos."); return; }
+                sequence = gerarSequencia(total);
+            } else if (cycleType === 'custom') {
+                const customInput = document.getElementById('customSequence').value;
+                sequence = customInput.split(',').map(item => item.trim()).filter(item => item.length > 0);
+                if (sequence.length === 0) { alert("Insira pelo menos uma matéria na lista."); return; }
+                total = sequence.length;
+                isCustom = true;
+            } else if (cycleType === 'carousel') {
+                const customInput = document.getElementById('customSequence').value;
+                sequence = customInput.split(',').map(item => item.trim()).filter(item => item.length > 0);
+                if (sequence.length === 0) { alert("Insira pelo menos uma matéria na lista."); return; }
+                total = sequence.length;
+                isCarousel = true;
+            }
+
+            const newSubject = {
+                id: Date.now(),
+                name: name,
+                total: total,
+                sequence: sequence,
+                currentIndex: 0,
+                isCustom: isCustom,
+                isCarousel: isCarousel,
+                dailyStudiedCount: 0,
+                lastDayRotated: new Date().toDateString(),
+                lastStudiedDate: null,
+                startDate: new Date().toISOString(),
+                endDate: null
+            };
+
+            subjects.push(newSubject);
+            salvarDados();
+            
+            nameInput.value = '';
+            document.getElementById('totalChapters').value = '';
+            document.getElementById('customSequence').value = '';
+            renderizarDashboard();
+        }
+
+        function excluirMateria(id) {
+            if(confirm("Tem certeza que deseja excluir este ciclo? O progresso será perdido.")) {
+                subjects = subjects.filter(sub => sub.id !== id);
+                salvarDados();
+                renderizarDashboard();
+            }
+        }
+
+        function abrirModalEdicao(id) {
+            const subject = subjects.find(sub => sub.id === id);
+            if (!subject) return;
+
+            document.getElementById('editSubjectId').value = subject.id;
+            document.getElementById('editSubjectName').value = subject.name;
+
+            if (subject.isCustom || subject.isCarousel) {
+                document.getElementById('editFeynmanDiv').style.display = 'none';
+                document.getElementById('editCustomDiv').style.display = 'block';
+                document.getElementById('editCustomSequence').value = subject.sequence.join(', ');
+            } else {
+                document.getElementById('editFeynmanDiv').style.display = 'block';
+                document.getElementById('editCustomDiv').style.display = 'none';
+                document.getElementById('editTotalChapters').value = subject.total;
+            }
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function fecharModalEdicao() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function salvarEdicao() {
+            const id = parseInt(document.getElementById('editSubjectId').value);
+            const subject = subjects.find(sub => sub.id === id);
+            if (!subject) return;
+
+            const newName = document.getElementById('editSubjectName').value.trim();
+            if (!newName) {
+                alert("O nome do ciclo não pode estar vazio.");
+                return;
+            }
+            subject.name = newName;
+
+            let novaSequencia = [];
+            
+            if (subject.isCustom || subject.isCarousel) {
+                const customInput = document.getElementById('editCustomSequence').value;
+                novaSequencia = customInput.split(',').map(item => item.trim()).filter(item => item.length > 0);
+                if (novaSequencia.length === 0) {
+                    alert("Insira pelo menos um item na lista.");
+                    return;
+                }
+                subject.total = novaSequencia.length;
+
+                if (subject.isCarousel) {
+                    subject.dailyStudiedCount = Math.min(subject.dailyStudiedCount || 0, novaSequencia.length);
+                }
+
+            } else {
+                const newTotal = parseInt(document.getElementById('editTotalChapters').value);
+                if (isNaN(newTotal) || newTotal <= 0) {
+                    alert("Número de capítulos inválido.");
+                    return;
+                }
+                subject.total = newTotal;
+                novaSequencia = gerarSequencia(newTotal);
+            }
+
+            subject.sequence = novaSequencia;
+
+            if (!subject.isCarousel && subject.currentIndex >= subject.sequence.length) {
+                subject.currentIndex = subject.sequence.length;
+                if (!subject.endDate) subject.endDate = new Date().toISOString();
+            } else {
+                subject.endDate = null;
+            }
+
+            salvarDados();
+            fecharModalEdicao();
+            renderizarDashboard();
+        }
+
+        function renderizarDashboard() {
+            verificarRotacaoDiaria(); 
+            
+            const list = document.getElementById('subjectsList');
+            list.innerHTML = '';
+
+            if (subjects.length === 0) {
+                list.innerHTML = '<p style="color: #bbb;">Nenhum ciclo cadastrado. Crie um acima!</p>';
+                return;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            subjects.forEach(sub => {
+                const card = document.createElement('div');
+                let isFinished = false;
+                let statusText = '';
+                
+                if (sub.isCarousel) {
+                    isFinished = sub.dailyStudiedCount >= sub.sequence.length;
+                    statusText = isFinished ? "Tudo estudado hoje!" : `${sub.dailyStudiedCount}/${sub.sequence.length} Hoje`;
+                } else {
+                    isFinished = sub.currentIndex >= sub.sequence.length;
+                    statusText = isFinished ? "Concluído!" : `Passo ${sub.currentIndex} de ${sub.sequence.length}`;
+                }
+                
+                let diffDays = 1; 
+                
+                if (sub.lastStudiedDate) {
+                    const lastDate = new Date(sub.lastStudiedDate);
+                    lastDate.setHours(0, 0, 0, 0);
+                    const diffTime = today.getTime() - lastDate.getTime();
+                    diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                }
+                
+                let cardClass = 'subject-card';
+                let dailyBadge = '';
+
+                if (isFinished && !sub.isCarousel) {
+                    cardClass += ' card-finished';
+                    dailyBadge = '<span class="badge badge-finished">🏆 Ciclo Finalizado</span>';
+                } else if (diffDays === 0) {
+                    cardClass += ' card-done-today';
+                    dailyBadge = '<span class="badge badge-done">✅ Feito Hoje</span>';
+                } else if (diffDays === 1 || !sub.lastStudiedDate) {
+                    dailyBadge = '<span class="badge badge-pending">⏳ Pendente Hoje</span>';
+                } else if (diffDays === 2) {
+                    dailyBadge = '<span class="badge badge-purple">⏳ 2 Dias Atrasado</span>';
+                } else if (diffDays === 3) {
+                    dailyBadge = '<span class="badge badge-yellow">⏳ 3 Dias Atrasado</span>';
+                } else if (diffDays >= 4) {
+                    dailyBadge = `<span class="badge badge-red">🚨 ${diffDays} Dias Atrasado</span>`;
+                }
+                
+                let dateInfo = '';
+                if (sub.startDate) {
+                    const startDate = new Date(sub.startDate);
+                    const startStr = startDate.toLocaleDateString('pt-BR');
+                    dateInfo = `Início: ${startStr}`;
+                    
+                    if (sub.endDate && !sub.isCarousel) {
+                        const endDate = new Date(sub.endDate);
+                        const endStr = endDate.toLocaleDateString('pt-BR');
+                        const timeDiff = endDate.getTime() - startDate.getTime();
+                        const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                        dateInfo += ` | Fim: ${endStr} (${daysDiff} dias no total)`;
+                    } else {
+                        const timeDiff = today.getTime() - startDate.getTime();
+                        let daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                        if (daysDiff < 0) daysDiff = 0; 
+                        dateInfo += ` | Duração: ${daysDiff} dias`;
+                    }
+                }
+
+                card.className = cardClass;
+                card.innerHTML = `
+                    <div class="subject-header">
+                        <div>
+                            <div class="subject-title">${sub.name}</div>
+                            ${dateInfo ? `<div class="subject-dates">${dateInfo}</div>` : ''}
+                            ${dailyBadge}
+                        </div>
+                        <span class="subject-progress">${statusText}</span>
+                    </div>
+                    <button onclick="abrirEstudo(${sub.id})">${isFinished && !sub.isCarousel ? 'Ver Resultado' : 'Continuar Estudando'}</button>
+                    <div class="action-buttons">
+                        <button class="btn-edit" onclick="abrirModalEdicao(${sub.id})">Editar</button>
+                        <button class="btn-danger" onclick="excluirMateria(${sub.id})">Excluir</button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function abrirEstudo(id) {
+            activeSubjectId = id;
+            document.getElementById('dashboardSection').style.display = 'none';
+            document.getElementById('studySection').style.display = 'block';
+            atualizarTelaEstudo();
+        }
+
+        function voltarDashboard() {
+            activeSubjectId = null;
+            document.getElementById('studySection').style.display = 'none';
+            document.getElementById('dashboardSection').style.display = 'block';
+            renderizarDashboard();
+        }
+
+        function atualizarTelaEstudo() {
+            const subject = subjects.find(sub => sub.id === activeSubjectId);
+            if (!subject) return;
+
+            document.getElementById('studyTitle').innerText = subject.name;
+            const nextBtn = document.getElementById('nextBtn');
+            const progressDisplay = document.getElementById('progressDisplay');
+            const chapterDisplay = document.getElementById('chapterDisplay');
+            const actionType = document.getElementById('actionType');
+            const trailContainer = document.getElementById('trailContainer');
+            const sequenceTrail = document.getElementById('sequenceTrail');
+
+            if (subject.isCarousel) {
+                progressDisplay.innerText = `${subject.dailyStudiedCount}/${subject.sequence.length} Passos Hoje`;
+                trailContainer.style.display = 'block';
+
+                let itemsHTML = subject.sequence.map((val, idx) => {
+                    let statusClass = '';
+                    if (idx < subject.dailyStudiedCount) statusClass = 'done';
+                    else if (idx === subject.dailyStudiedCount) statusClass = 'active';
+                    return `<span class="trail-item ${statusClass}">${val}</span>`;
+                }).join(', ');
+                sequenceTrail.innerHTML = `<div class="trail-bloco">[ ${itemsHTML} ]</div>`;
+
+                if (subject.dailyStudiedCount < subject.sequence.length) {
+                    chapterDisplay.innerText = subject.sequence[subject.dailyStudiedCount];
+                    actionType.innerText = "Estudo do Carrossel";
+                    actionType.style.color = "#4CAF50";
+                    nextBtn.disabled = false;
+                    nextBtn.innerText = "Marcar como Concluído";
+                } else {
+                    chapterDisplay.innerText = "Meta Diária Atingida!";
+                    actionType.innerText = "Amanhã a fila será atualizada com os lugares trocados.";
+                    actionType.style.color = "#FFD700";
+                    nextBtn.disabled = true;
+                    nextBtn.innerText = "Finalizado por Hoje";
+                }
+            } else {
+                progressDisplay.innerText = `${subject.currentIndex}/${subject.sequence.length} Passos`;
+                trailContainer.style.display = 'block';
+                
+                let sequenceObjs = subject.sequence.map((val, idx) => ({ val, idx }));
+                let blocos = [];
+                let i = 0;
+
+                while (i < sequenceObjs.length) {
+                    blocos.push(sequenceObjs.slice(i, i + 9));
+                    i += 9;
+                }
+
+                let blocoAtivo;
+                if (subject.currentIndex < subject.sequence.length) {
+                    blocoAtivo = blocos.find(bloco => bloco.some(item => item.idx === subject.currentIndex));
+                } else {
+                    blocoAtivo = blocos[blocos.length - 1];
+                }
+
+                if (blocoAtivo) {
+                    let itemsHTML = blocoAtivo.map(item => {
+                        let statusClass = '';
+                        if (item.idx < subject.currentIndex) statusClass = 'done';
+                        else if (item.idx === subject.currentIndex) statusClass = 'active';
+                        
+                        return `<span class="trail-item ${statusClass}">${item.val}</span>`;
+                    }).join(', ');
+                    
+                    sequenceTrail.innerHTML = `<div class="trail-bloco">[ ${itemsHTML} ]</div>`;
+                } else {
+                    sequenceTrail.innerHTML = '';
+                }
+
+                if (subject.currentIndex < subject.sequence.length) {
+                    const currentVal = subject.sequence[subject.currentIndex];
+                    
+                    if (subject.isCustom) {
+                        chapterDisplay.innerText = currentVal;
+                        actionType.innerText = "Estudo Direcionado";
+                        actionType.style.color = "#4CAF50";
+                    } else {
+                        chapterDisplay.innerText = `Capítulo ${currentVal}`;
+                        const positionInBlock = subject.currentIndex % 9;
+                        if (positionInBlock < 3) {
+                            actionType.innerText = "Primeiro Estudo";
+                            actionType.style.color = "#4CAF50";
+                        } else if (positionInBlock < 6) {
+                            actionType.innerText = "Segunda Passagem";
+                            actionType.style.color = "#FF9800";
+                        } else {
+                            actionType.innerText = "Revisão Final";
+                            actionType.style.color = "#2196F3";
+                        }
+                    }
+
+                    nextBtn.disabled = false;
+                    nextBtn.innerText = "Avançar";
+                } else {
+                    chapterDisplay.innerText = "Fim!";
+                    actionType.innerText = "Ciclo concluído com sucesso.";
+                    actionType.style.color = "#FFD700";
+                    nextBtn.disabled = true;
+                    nextBtn.innerText = "Finalizado";
+                }
+            }
+        }
+
+        function avancarPasso() {
+            const subjectIndex = subjects.findIndex(sub => sub.id === activeSubjectId);
+            if (subjectIndex === -1) return;
+            
+            const subject = subjects[subjectIndex];
+            let houveAvanco = false;
+
+            if (subject.isCarousel) {
+                if (subject.dailyStudiedCount < subject.sequence.length) {
+                    subject.dailyStudiedCount++;
+                    subject.lastStudiedDate = new Date().toDateString();
+                    houveAvanco = true;
+                }
+            } else {
+                if (subject.currentIndex < subject.sequence.length) {
+                    subject.currentIndex++;
+                    subject.lastStudiedDate = new Date().toDateString(); 
+                    if (subject.currentIndex >= subject.sequence.length && !subject.endDate) {
+                        subject.endDate = new Date().toISOString();
+                    }
+                    houveAvanco = true;
+                }
+            }
+
+            if (houveAvanco) {
+                subjects.splice(subjectIndex, 1); 
+                subjects.push(subject);           
+                
+                salvarDados();
+                atualizarTelaEstudo();
+            }
+        }
+
+        function exportarDados(event) {
+            if (event) event.preventDefault();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(subjects));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "ciclo_estudos_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function importarDados(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        subjects = importedData;
+                        salvarDados();
+                        renderizarDashboard();
+                        alert("Dados importados com sucesso!");
+                    } else {
+                        alert("Formato de arquivo inválido. Certifique-se de ser um backup válido.");
+                    }
+                } catch (error) {
+                    alert("Erro ao ler o arquivo. Ele pode estar corrompido.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
+        }
+
+        renderizarDashboard();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
+            });
+        }
+    </script>
+</body>
+</html>
